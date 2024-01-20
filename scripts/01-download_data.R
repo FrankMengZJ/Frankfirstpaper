@@ -11,14 +11,22 @@
 #### Workspace setup ####
 library(opendatatoronto)
 library(tidyverse)
+library(dplyr)
+
+
+
 # [...UPDATE THIS...]
 
 #### Download data ####
 # [...ADD CODE HERE TO DOWNLOAD...]
 
+the_raw_data <- 
+  list_package_resources("https://open.toronto.ca/dataset/ttc-subway-delay-data/") %>%
+  filter(name == "ttc-subway-delay-data-2023" ) %>%
+  get_resource()
+the_raw_data
 
 
-#### Save data ####
 # [...UPDATE THIS...]
 # change the_raw_data to whatever name you assigned when you downloaded it.
 write_csv(the_raw_data, "inputs/data/raw_data.csv") 
