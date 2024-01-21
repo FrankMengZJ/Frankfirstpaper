@@ -13,6 +13,7 @@ library(dplyr)
 #### Clean data ####
 raw_data <- read_csv("inputs/data/raw_data.csv")
 
+
 cleaned_data <-
   raw_data |>
   rename(Min_Delay = "Min Delay", Min_Gap = "Min Gap")|>
