@@ -16,8 +16,9 @@ raw_data <- read_csv("inputs/data/raw_data.csv")
 cleaned_data <-
   raw_data |>
   rename(Min_Delay = "Min Delay", Min_Gap = "Min Gap")|>
-  select(Date, Time, Day, Station, Min_Delay, Min_Gap, Line) |>
-  filter(Min_Delay > 0)
+  select(Date, Time, Day, Station, Min_Delay, Line) |>
+  filter(Min_Delay > 0) %>% 
+  group_by(Line)
 cleaned_data
 #### Save data ####
 write_csv(cleaned_data, "outputs/data/analysis_data.csv")
