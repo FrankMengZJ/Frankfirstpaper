@@ -1,21 +1,17 @@
 #### Preamble ####
-# Purpose: Downloads and saves the data from [...UPDATE THIS...]
-# Author: Rohan Alexander [...UPDATE THIS...]
-# Date: 11 February 2023 [...UPDATE THIS...]
-# Contact: rohan.alexander@utoronto.ca [...UPDATE THIS...]
+# Purpose: Downloads and saves the data from opendatatoronto
+# Author: Zijun Mneg
+# Date: 24 January 2024
+# Contact: zijun.meng@mai.utoronto.ca
 # License: MIT
-# Pre-requisites: [...UPDATE THIS...]
-# Any other information needed? [...UPDATE THIS...]
+# Pre-requisites: -
 
 
 #### Workspace setup ####
 library(opendatatoronto)
 library(tidyverse)
-library(dplyr)
 library(gitcreds)
 
-
-# [...UPDATE THIS...]
 
 #### Download data ####
 # [...ADD CODE HERE TO DOWNLOAD...]
