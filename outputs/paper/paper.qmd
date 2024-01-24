@@ -111,6 +111,8 @@ Passengers mistriggering alarms is also a problem worth considering, apart from 
 In conclusion, by solving these problems, TTC can not only decrease the number of delays but also improve the safety of all the passengers.
 
 
+\newpage
+
 # References
 
 
