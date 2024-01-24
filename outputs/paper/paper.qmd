@@ -1,13 +1,11 @@
 ---
-title: "My title"
-subtitle: "My subtitle if needed"
+title: "Analysis of TTC Subway Delays in 2023: Uncovering Trends and Insights"
 author: 
-  - First author
-  - Another author
-thanks: "Code and data are available at: LINK."
+  - Zijun Meng
+thanks: "Code and data are available at: https://github.com/FrankMengZJ/TTC-Subway-Delay"
 date: today
 date-format: long
-abstract: "First sentence. Second sentence. Third sentence. Fourth sentence."
+abstract: "Subway plays an important role in many Toronto citizens' life, each delay may disturb them a lot. By analyzing the data of TTC subway delays, I found that most delays are because of customers' misbehavior or vehicles' problems. This may help TTC find why their subways delay a lot and consequently improve their service. It can also contribute to the safety of passengers."
 format: pdf
 number-sections: true
 bibliography: references.bib
@@ -19,201 +17,98 @@ bibliography: references.bib
 #| message: false
 
 library(tidyverse)
-library(palmerpenguins)
+library(here)
+library(kableExtra)
+library(ggplot2)
+# Acquiring the cleaned delay data
+delay_data <- read_csv(file=here("outputs/data/analysis_data.csv"))
 ```
 
 
 # Introduction
 
-You can and should cross-reference sections and sub-sections. 
+The subway system, as a part of the Toronto Transit Commission (TTC) service, plays an important role in the daily lives of commuters in Toronto . According to @ttctransitplanning, on average, the number of customer boardings on weekdays in 2022 is 746,200, its efficient functioning may benefit hundreds of thousands of people's life and contribute to the economy of the city. Given its critical importance, understanding why subway delays is essential to improve the system. 
 
-The remainder of this paper is structured as follows. @sec-data....
+To analyze the data, I worked on R [@citeR], using the tidyverse [@tidyverse], opendatatoronto [@opendatatoronto], and gitcreds [@gitcreds] packages. Tables in the report were created with kableExtra [@kableExtra] and figures were created with ggplot2 which was built in tidyverse [@tidyverse]. By studying on the causes, we learned that there are several factors not only make the subway late but also threats the safety of passengers, it is necessary for TTC to take actions.
+
 
 
 
 # Data {#sec-data}
 
-Some of our data is of penguins (@fig-bills), from @palmerpenguins.
+The TTC Subway Delay Data @subwaydelaydata records the information of each delay they faced including time, location and reason which can be used to analyze and consequently find some insights to reduce the problems. 
+@tbl-data-sample shows a sample of the cleaned data set. Variables "Date", "Time" and "Day" state when the delay happens, variable "Station" shows where the delay heppens, variable "Code" indicates what caused the delay, variable "Min_Delay" records how many minutes the subway delayed, and finally "Line" shows which subway line delayed. Although @subwaydelaydata  provided the data from 2018 to 2023, the reason why I only work on the 2023 is the subway service was significantly influenced by COVID-19 from 2020 to 2022, while prepandemic data was too old, the problems may be different from what we have now. In this case, I will only focus on the post pandemic era, 2023. 
 
 ```{r}
-#| label: fig-bills
-#| fig-cap: Bills of penguins
-#| echo: false
-
-ggplot(penguins, aes(x = island, fill = species)) +
-  geom_bar(alpha = 0.8) +
-  scale_fill_manual(values = c("darkorange","purple","cyan4"),
-                    guide = "none") +
-  theme_minimal() +
-  facet_wrap(~species, ncol = 1) +
-  coord_flip()
-```
-
-Talk more about it.
-
-And also planes (@fig-planes). (You can change the height and width, but don't worry about doing that until you have finished every other aspect of the paper - Quarto will try to make it look nice and the defaults usually work well once you have enough text.)
-
-```{r}
-#| label: fig-planes
-#| fig-cap: Relationship between wing length and width
+#| label: tbl-data-sample
+#| tbl-cap: "The first five rows from the cleaned TTC metro delay data"
 #| echo: false
 #| warning: false
-#| message: false
-
-analysis_data <- read_csv(here::here("outputs/data/analysis_data.csv"))
-
-analysis_data |> 
-  ggplot(aes(x = width, y = length)) +
-  geom_point(alpha = 0.8) +
-  theme_minimal() +
-  labs(x = "Wing width (mm)",
-       y = "Wing length (mm)")
+#| render: asis
+#| 
+delay_data |>
+  head(5) |>
+  kable()
 ```
 
-Talk way more about it. 
-
-
-
-# Model
-
-The goal of our modelling strategy is twofold. Firstly,...
-
-Here we briefly describe the Bayesian analysis model used to investigate... Background details and diagnostics are included in [Appendix -@sec-model-details].
-
-## Model set-up
-
-Define $y_i$ as the number of seconds that the plane remained aloft. Then $\beta_i$ is the wing width and $\gamma_i$ is the wing length, both measured in millimeters.  
-
-\begin{align} 
-y_i|\mu_i, \sigma &\sim \mbox{Normal}(\mu_i, \sigma) \\
-\mu_i &= \alpha + \beta_i + \gamma_i\\
-\alpha &\sim \mbox{Normal}(0, 2.5) \\
-\beta &\sim \mbox{Normal}(0, 2.5) \\
-\gamma &\sim \mbox{Normal}(0, 2.5) \\
-\sigma &\sim \mbox{Exponential}(1)
-\end{align}
-
-We run the model in R [@citeR] using the `rstanarm` package of @rstanarm. We use the default priors from `rstanarm`.
-
-
-### Model justification
-
-We expect a positive relationship between the size of the wings and time spent aloft. In particular...
-
-We can use maths by including latex between dollar signs, for instance $\theta$.
-
-
-# Results
-
-Our results are summarized in @tbl-modelresults.
+Firstly, I analyzed the number of delays by line. As @fig-delay-by-line shows, majority of delays happened in YU (Line 1) and BD (Line 2), as they are the busiest subway lines in Toronto, this is not surprising. 
 
 ```{r}
+#| label: fig-delay-by-line
+#| fig-cap: "Delay by line"
 #| echo: false
-#| eval: true
 #| warning: false
-#| message: false
-
-library(rstanarm)
-
-first_model <-
-  readRDS(file = here::here("outputs/models/first_model.rds"))
+#| render: asis
+#| 
+delaybyline <-
+  delay_data |>
+  group_by(Line) %>%
+  summarise(Mean_Delay = mean(Min_Delay),n = n()) |>
+  filter(n > 100) |>
+  arrange(-n)
+ggplot(data=delaybyline, aes(x=Line, y=Mean_Delay)) +
+  geom_bar(stat="identity")
 ```
+
+There are 161 kinds of cases that caused the delay in 2023, among them, the top 16 kinds of incidents led to 6015 out of 8234 of all the delays, as they are the most important ones. @tbl-delay-by-reason showed the number of cases happened and the mean of  how long they delayed. 
 
 ```{r}
+#| label: tbl-delay-by-reason
+#| tbl-cap: "Delay by reason"
 #| echo: false
-#| eval: true
-#| label: tbl-modelresults
-#| tbl-cap: "Explanatory models of flight time based on wing width and wing length"
 #| warning: false
+#| render: asis
+cleaned_data <- read_csv(file=here("outputs/data/analysis_data.csv"))
+cleaned_data$Code[cleaned_data$Code == 'SUDP'] <- 'Disorderly Patron'
+cleaned_data$Code[cleaned_data$Code == 'MUPAA'] <- 'Passenger Assistance Alarm Activated - No Trouble Found'
+cleaned_data$Code[cleaned_data$Code == 'PUOPO'] <- 'OPTO (COMMS) Train Door Monitoring'
+cleaned_data$Code[cleaned_data$Code == 'SUO'] <- 'Passenger Other'
+cleaned_data$Code[cleaned_data$Code == 'MUIR'] <- 'Injured or ill Customer (On Train) - Medical Aid Refused'
+cleaned_data$Code[cleaned_data$Code == 'SUUT'] <- 'Unauthorized at Track Level'
+cleaned_data$Code[cleaned_data$Code == 'MUSAN'] <- 'Unsanitary Vehicle'
+cleaned_data$Code[cleaned_data$Code == 'MUI'] <- 'Injured or ill Customer (On Train) - Transported'
+cleaned_data$Code[cleaned_data$Code == 'MUATC'] <- 'ATC Project'
+cleaned_data$Code[cleaned_data$Code == 'TUO'] <- 'Transportation Department - Other'
+cleaned_data$Code[cleaned_data$Code == 'EUDO'] <- 'Door Problems - Faulty Equipment'
+cleaned_data$Code[cleaned_data$Code == 'MUO'] <- 'Miscellaneous Other'
+cleaned_data$Code[cleaned_data$Code == 'SUAP'] <- 'Assault / Patron Involved'
+cleaned_data$Code[cleaned_data$Code == 'SUEAS'] <- 'Emergency Alarm Station Activation'
+cleaned_data$Code[cleaned_data$Code == 'MUDD'] <- 'Door Problems - Debris Related'
+cleaned_data$Code[cleaned_data$Code == 'MUTO'] <- 'Misc. Transportation Other - Employee Non-Chargeable'
 
-modelsummary::modelsummary(
-  list(
-    "First model" = first_model
-  ),
-  statistic = "mad",
-  fmt = 2
-)
+
+cleaned_data %>%
+  group_by(Code) %>% 
+  summarise(Mean_Delay = mean(Min_Delay),n = n()) %>%
+  arrange(-n) %>%
+  filter(n>100)%>%
+  kable()
 ```
+@tbl-delay-by-reason showed that Disorderly Patrons causes the most delays, while Unauthorized at Track Level, which causes the longest delays among the most frequent caues in average, and Assault / Patron Involved are important factors as well. These kinds of delays usually come from people's misbehavior, and potentially may harm other customers as well as themselves. For the subways' efficiency and customers' safety, I suggest TTC focus more on the order in stations, maybe considering hiring more staff to decrease the number of such incidents. 
 
+Passengers mistriggering alarms is also a problem worth considering, apart from making the trains late, they may make other customers panic and may cause harm to them, TTC can consider improve how users use the alarm. What's more, the problems of trains themselves are also critical, there are more than 300 delays caused by door problems, which is possible to hurt the passengers, TTC is responsible for keeping the vehicles safe to use, maybe they need more overhauls.
 
-
-
-# Discussion
-
-## First discussion point {#sec-first-point}
-
-If my paper were 10 pages, then should be be at least 2.5 pages. The discussion is a chance to show off what you know and what you learnt from all this. 
-
-## Second discussion point
-
-## Third discussion point
-
-## Weaknesses and next steps
-
-Weaknesses and next steps should also be included.
-
-\newpage
-
-\appendix
-
-# Appendix {-}
-
-
-# Additional data details
-
-# Model details {#sec-model-details}
-
-## Posterior predictive check
-
-In @fig-ppcheckandposteriorvsprior-1 we implement a posterior predictive check. This shows...
-
-In @fig-ppcheckandposteriorvsprior-2 we compare the posterior with the prior. This shows... 
-
-```{r}
-#| eval: true
-#| echo: false
-#| message: false
-#| warning: false
-#| label: fig-ppcheckandposteriorvsprior
-#| layout-ncol: 2
-#| fig-cap: "Examining how the model fits, and is affected by, the data"
-#| fig-subcap: ["Posterior prediction check", "Comparing the posterior with the prior"]
-
-pp_check(first_model) +
-  theme_classic() +
-  theme(legend.position = "bottom")
-
-posterior_vs_prior(first_model) +
-  theme_minimal() +
-  scale_color_brewer(palette = "Set1") +
-  theme(legend.position = "bottom") +
-  coord_flip()
-```
-
-## Diagnostics
-
-@fig-stanareyouokay-1 is a trace plot. It shows... This suggests...
-
-@fig-stanareyouokay-2 is a Rhat plot. It shows... This suggests...
-
-```{r}
-#| echo: false
-#| eval: true
-#| message: false
-#| warning: false
-#| label: fig-stanareyouokay
-#| fig-cap: "Checking the convergence of the MCMC algorithm"
-#| fig-subcap: ["Trace plot", "Rhat plot"]
-#| layout-ncol: 2
-
-plot(first_model, "trace")
-
-plot(first_model, "rhat")
-```
-
-
-
-\newpage
+In conclusion, by solving these problems, TTC can not only decrease the number of delays but also improve the safety of all the passengers.
 
 
 # References
